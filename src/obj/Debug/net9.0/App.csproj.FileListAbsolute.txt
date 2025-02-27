@@ -1,0 +1,4 @@
+/Users/miles/Learning/fsharp/elmish-starter-template/src/bin/Debug/net9.0/App.deps.json
+/Users/miles/Learning/fsharp/elmish-starter-template/src/obj/Debug/net9.0/App.GeneratedMSBuildEditorConfig.editorconfig
+/Users/miles/Learning/fsharp/elmish-starter-template/src/obj/Debug/net9.0/App.AssemblyInfoInputs.cache
+/Users/miles/Learning/fsharp/elmish-starter-template/src/obj/Debug/net9.0/App.AssemblyInfo.cs
