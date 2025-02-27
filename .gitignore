@@ -23,4 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-src/obj
+src/obj/*
+src/fable_modules/*
+src/bin/*
