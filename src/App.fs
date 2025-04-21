@@ -65,6 +65,12 @@ let init () =
       NewTodo = ""
       SelectedFilter = All }
 
+let updateTodoList state todoId updateTodo =
+    let todo = state.TodoList[todoId]
+
+    { state with
+        TodoList = state.TodoList |> Map.add todoId (updateTodo todo) }
+
 let update msg state =
     match msg with
 
@@ -80,30 +86,18 @@ let update msg state =
             TodoList = state.TodoList |> Map.add todoId todo }
 
     | ApplyEdit todoId ->
-        let todo = state.TodoList[todoId]
-
-        let editedTodo =
+        updateTodoList state todoId (fun todo ->
             { todo with
-                Description = todo.EditDescription }
+                Description = todo.EditDescription })
 
-        { state with
-            TodoList = state.TodoList |> Map.add todoId editedTodo }
-
-    | CancelEdit todoId ->
-        let todo = state.TodoList[todoId]
-
-        { state with
-            TodoList = state.TodoList |> Map.add todoId { todo with BeingEdited = false } }
+    | CancelEdit todoId -> updateTodoList state todoId (fun todo -> { todo with BeingEdited = false })
 
     | DeleteTodo todoId ->
         { state with
             TodoList = state.TodoList |> Map.remove todoId }
 
     | SetEditedDescription(todoId, newText) ->
-        let todo = state.TodoList[todoId]
-
-        { state with
-            TodoList = state.TodoList |> Map.add todoId { todo with EditDescription = newText } }
+        updateTodoList state todoId (fun todo -> { todo with EditDescription = newText })
 
     | SetNewTodo desc -> { state with NewTodo = desc }
 
@@ -118,25 +112,15 @@ let update msg state =
             SelectedFilter = Incomplete }
 
     | StartEditingTodo todoId ->
-        let todo = state.TodoList[todoId]
-
-        let editingTodo =
+        updateTodoList state todoId (fun todo ->
             { todo with
                 BeingEdited = true
-                EditDescription = todo.Description }
-
-        { state with
-            TodoList = state.TodoList |> Map.add todoId editingTodo }
+                EditDescription = todo.Description })
 
     | ToggleCompleted todoId ->
-        let todo = state.TodoList[todoId]
-
-        let toggleCompleted todo =
+        updateTodoList state todoId (fun todo ->
             { todo with
-                Completed = not todo.Completed }
-
-        { state with
-            TodoList = state.TodoList |> Map.add todoId (toggleCompleted todo) }
+                Completed = not todo.Completed })
 
 /// Helper function to easily construct div with only classes and children
 let div (classes: string list) (children: Fable.React.ReactElement list) =
@@ -224,7 +208,7 @@ let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
 let todoList (state: State) (dispatch: Msg -> unit) =
     ul
         [ children
-              [ for id, todo in state.TodoList |> filterTodosBy state.SelectedFilter |> Map.toSeq ->
+              [ for _id, todo in state.TodoList |> filterTodosBy state.SelectedFilter |> Map.toSeq ->
                     if todo.BeingEdited then
                         renderEditForm todo dispatch
                     else
