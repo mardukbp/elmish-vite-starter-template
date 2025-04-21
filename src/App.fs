@@ -24,7 +24,7 @@ type Filter =
     | Incomplete
 
 type State =
-    { TodoList: Todo list
+    { TodoList: Map<Guid, Todo>
       NewTodo: string
       SelectedFilter: Filter }
 
@@ -42,104 +42,65 @@ type Msg =
     | ShowIncomplete
 
 let init () =
-    { TodoList =
-        [ { Description = "Learn F#"
-            Completed = false
-            Id = Guid.NewGuid()
-            BeingEdited = false
-            EditDescription = "Learn F#" } ]
+    let todoId = Guid.NewGuid()
+
+    let todo =
+        { Id = todoId
+          Description = "Learn F#"
+          Completed = false
+          BeingEdited = false
+          EditDescription = "Learn F#" }
+
+    { TodoList = Map [ todoId, todo ]
       NewTodo = ""
       SelectedFilter = All }
 
 let update msg state =
     match msg with
 
-    | SetNewTodo desc -> { state with NewTodo = desc }
-
-    | DeleteTodo todoId ->
-        let todoList = state.TodoList |> List.filter (fun todo -> todo.Id <> todoId)
-
-        { state with TodoList = todoList }
-
-    | ToggleCompleted todoId ->
-        let todoList =
-            state.TodoList
-            |> List.map (fun todo ->
-                if todo.Id = todoId then
-                    { todo with
-                        Completed = not todo.Completed }
-                else
-                    todo)
-
-        { state with TodoList = todoList }
-
     | AddNewTodo when state.NewTodo = "" -> state
 
     | AddNewTodo ->
+        let todoId = Guid.NewGuid()
+
+        let todo =
+            { Id = todoId
+              Description = state.NewTodo
+              Completed = false
+              BeingEdited = false
+              EditDescription = state.NewTodo }
+
         { state with
             NewTodo = ""
-            TodoList =
-                { Description = state.NewTodo
-                  Completed = false
-                  Id = Guid.NewGuid()
-                  BeingEdited = false
-                  EditDescription = state.NewTodo }
-                :: state.TodoList }
-
-    | StartEditingTodo todoId ->
-        let editingTodos =
-            List.map
-                (fun todo ->
-                    if todo.Id = todoId then
-                        { todo with
-                            BeingEdited = true
-                            EditDescription = todo.Description }
-                    else
-                        todo)
-
-                state.TodoList
-
-        { state with TodoList = editingTodos }
-
-    | CancelEdit todoId ->
-        let editingTodos =
-            List.map
-                (fun todo ->
-                    if todo.Id = todoId then
-                        { todo with BeingEdited = false }
-                    else
-                        todo)
-
-                state.TodoList
-
-        { state with TodoList = editingTodos }
+            TodoList = state.TodoList |> Map.add todoId todo }
 
     | ApplyEdit todoId ->
-        let editingTodos =
-            List.map
-                (fun todo ->
-                    if todo.Id = todoId then
-                        { todo with
-                            Description = todo.EditDescription }
-                    else
-                        todo)
+        let todo = state.TodoList[todoId]
 
-                state.TodoList
+        let editedTodo =
+            { todo with
+                Description = todo.EditDescription }
 
-        { state with TodoList = editingTodos }
+        { state with
+            TodoList = state.TodoList |> Map.add todoId editedTodo }
+
+    | CancelEdit todoId ->
+        let todo = state.TodoList[todoId]
+
+        { state with
+            TodoList = state.TodoList |> Map.add todoId { todo with BeingEdited = false } }
+
+    | DeleteTodo todoId ->
+        { state with
+            TodoList = state.TodoList |> Map.remove todoId }
 
     | SetEditedDescription(todoId, newText) ->
-        let editingTodos =
-            List.map
-                (fun todo ->
-                    if todo.Id = todoId then
-                        { todo with EditDescription = newText }
-                    else
-                        todo)
+        let todo = state.TodoList[todoId]
 
-                state.TodoList
+        { state with
+            TodoList = state.TodoList |> Map.add todoId { todo with EditDescription = newText } }
 
-        { state with TodoList = editingTodos }
+    | SetNewTodo desc -> { state with NewTodo = desc }
 
     | ShowAll -> { state with SelectedFilter = All }
 
@@ -150,6 +111,27 @@ let update msg state =
     | ShowIncomplete ->
         { state with
             SelectedFilter = Incomplete }
+
+    | StartEditingTodo todoId ->
+        let todo = state.TodoList[todoId]
+
+        let editingTodo =
+            { todo with
+                BeingEdited = true
+                EditDescription = todo.Description }
+
+        { state with
+            TodoList = state.TodoList |> Map.add todoId editingTodo }
+
+    | ToggleCompleted todoId ->
+        let todo = state.TodoList[todoId]
+
+        let toggleCompleted todo =
+            { todo with
+                Completed = not todo.Completed }
+
+        { state with
+            TodoList = state.TodoList |> Map.add todoId (toggleCompleted todo) }
 
 let appTitle = Html.p [ prop.className Bulma.Title; prop.text "Elmish To-Do list" ]
 
@@ -206,7 +188,6 @@ let renderTodo (todo: Todo) (dispatch: Msg -> unit) =
                                   prop.onClick (fun _ -> dispatch (DeleteTodo todo.Id))
                                   prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaTimes ] ] ] ] ] ] ] ]
 
-
 let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
     div
         [ Bulma.Box ]
@@ -238,16 +219,16 @@ let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
                             prop.onClick (fun _ -> dispatch (CancelEdit todo.Id))
                             prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaArrowRight ] ] ] ] ] ] ]
 
-let filterTodos filter todoList =
+let filterTodosBy filter todoList =
     match filter with
     | All -> todoList
-    | Completed -> List.filter _.Completed todoList
-    | Incomplete -> List.filter (fun todo -> not todo.Completed) todoList
+    | Completed -> Map.filter (fun id todo -> todo.Completed) todoList
+    | Incomplete -> Map.filter (fun id todo -> not todo.Completed) todoList
 
 let todoList (state: State) (dispatch: Msg -> unit) =
     Html.ul
         [ prop.children
-              [ for todo in filterTodos state.SelectedFilter state.TodoList ->
+              [ for id, todo in state.TodoList |> filterTodosBy state.SelectedFilter |> Map.toSeq ->
                     if todo.BeingEdited then
                         renderEditForm todo dispatch
                     else
