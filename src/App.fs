@@ -1,6 +1,7 @@
 module App
 
 open Elmish
+open Elmish.Debug
 open Elmish.React
 open Feliz
 open System
@@ -244,4 +245,5 @@ let render state dispatch =
 
 Program.mkSimple init update render
 |> Program.withReactSynchronous "root"
+|> Program.withDebugger
 |> Program.run

@@ -18,6 +18,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "globals": "^15.15.0",
+    "remotedev": "^0.2.9",
     "vite": "^6.2.0"
   }
 }
