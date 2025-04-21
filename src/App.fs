@@ -49,15 +49,17 @@ let filterTodosBy filter todoList =
     | Completed -> Map.filter (fun id todo -> todo.Completed) todoList
     | Incomplete -> Map.filter (fun id todo -> not todo.Completed) todoList
 
+let newTodo todoId description =
+    { Id = todoId
+      Description = description
+      Completed = false
+      BeingEdited = false
+      EditDescription = description }
+
 let init () =
     let todoId = Guid.NewGuid()
 
-    let todo =
-        { Id = todoId
-          Description = "Learn F#"
-          Completed = false
-          BeingEdited = false
-          EditDescription = "Learn F#" }
+    let todo = newTodo todoId "Learn F#"
 
     { TodoList = Map [ todoId, todo ]
       NewTodo = ""
@@ -71,12 +73,7 @@ let update msg state =
     | AddNewTodo ->
         let todoId = Guid.NewGuid()
 
-        let todo =
-            { Id = todoId
-              Description = state.NewTodo
-              Completed = false
-              BeingEdited = false
-              EditDescription = state.NewTodo }
+        let todo = newTodo todoId state.NewTodo
 
         { state with
             NewTodo = ""
