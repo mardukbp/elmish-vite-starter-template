@@ -5,6 +5,8 @@ open Elmish.React
 open Feliz
 open System
 open Zanaptak.TypedCssClasses
+open type Html
+open type prop
 
 type Bulma = CssClasses<"https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css", Naming.PascalCase>
 
@@ -40,6 +42,12 @@ type Msg =
     | ShowAll
     | ShowCompleted
     | ShowIncomplete
+
+let filterTodosBy filter todoList =
+    match filter with
+    | All -> todoList
+    | Completed -> Map.filter (fun id todo -> todo.Completed) todoList
+    | Incomplete -> Map.filter (fun id todo -> not todo.Completed) todoList
 
 let init () =
     let todoId = Guid.NewGuid()
@@ -133,60 +141,57 @@ let update msg state =
         { state with
             TodoList = state.TodoList |> Map.add todoId (toggleCompleted todo) }
 
-let appTitle = Html.p [ prop.className Bulma.Title; prop.text "Elmish To-Do list" ]
-
-let inputField (state: State) (dispatch: Msg -> unit) =
-    Html.div
-        [ prop.classes [ Bulma.Field; Bulma.HasAddons ]
-          prop.children
-              [ Html.div
-                    [ prop.classes [ Bulma.Control; Bulma.IsExpanded ]
-                      prop.children
-                          [ Html.input
-                                [ prop.classes [ Bulma.Input; Bulma.IsMedium ]
-                                  prop.valueOrDefault state.NewTodo
-                                  prop.onChange (SetNewTodo >> dispatch) ] ] ]
-
-                Html.div
-                    [ prop.className Bulma.Control
-                      prop.children
-                          [ Html.button
-                                [ prop.classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
-                                  prop.onClick (fun _ -> dispatch AddNewTodo)
-                                  prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaPlus ] ] ] ] ] ] ] ]
-
 /// Helper function to easily construct div with only classes and children
 let div (classes: string list) (children: Fable.React.ReactElement list) =
     Html.div [ prop.classes classes; prop.children children ]
+
+let appTitle = p [ className Bulma.Title; text "Elmish To-Do list" ]
+
+let inputField (state: State) (dispatch: Msg -> unit) =
+    div
+        [ Bulma.Field; Bulma.HasAddons ]
+        [ div
+              [ Bulma.Control; Bulma.IsExpanded ]
+              [ input
+                    [ classes [ Bulma.Input; Bulma.IsMedium ]
+                      valueOrDefault state.NewTodo
+                      onChange (SetNewTodo >> dispatch) ] ]
+
+          div
+              [ Bulma.Control ]
+              [ button
+                    [ classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
+                      onClick (fun _ -> dispatch AddNewTodo)
+                      children [ i [ classes [ FA.Fa; FA.FaPlus ] ] ] ] ] ]
 
 let renderTodo (todo: Todo) (dispatch: Msg -> unit) =
     div
         [ Bulma.Box ]
         [ div
               [ Bulma.Columns; Bulma.IsMobile; Bulma.IsVcentered ]
-              [ div [ Bulma.Column ] [ Html.p [ prop.className Bulma.Subtitle; prop.text todo.Description ] ]
+              [ div [ Bulma.Column ] [ p [ className Bulma.Subtitle; text todo.Description ] ]
 
                 div
                     [ Bulma.Column; Bulma.IsNarrow ]
                     [ div
                           [ Bulma.Buttons ]
-                          [ Html.button
-                                [ prop.classes
+                          [ button
+                                [ classes
                                       [ Bulma.Button
                                         if todo.Completed then
                                             Bulma.IsSuccess ]
-                                  prop.onClick (fun _ -> dispatch (ToggleCompleted todo.Id))
-                                  prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaCheck ] ] ] ]
+                                  onClick (fun _ -> dispatch (ToggleCompleted todo.Id))
+                                  children [ i [ classes [ FA.Fa; FA.FaCheck ] ] ] ]
 
-                            Html.button
-                                [ prop.classes [ Bulma.Button; Bulma.IsPrimary ]
-                                  prop.onClick (fun _ -> dispatch (StartEditingTodo todo.Id))
-                                  prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaEdit ] ] ] ]
+                            button
+                                [ classes [ Bulma.Button; Bulma.IsPrimary ]
+                                  onClick (fun _ -> dispatch (StartEditingTodo todo.Id))
+                                  children [ i [ classes [ FA.Fa; FA.FaEdit ] ] ] ]
 
-                            Html.button
-                                [ prop.classes [ Bulma.Button; Bulma.IsDanger ]
-                                  prop.onClick (fun _ -> dispatch (DeleteTodo todo.Id))
-                                  prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaTimes ] ] ] ] ] ] ] ]
+                            button
+                                [ classes [ Bulma.Button; Bulma.IsDanger ]
+                                  onClick (fun _ -> dispatch (DeleteTodo todo.Id))
+                                  children [ i [ classes [ FA.Fa; FA.FaTimes ] ] ] ] ] ] ] ]
 
 let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
     div
@@ -195,39 +200,33 @@ let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
               [ Bulma.Field; Bulma.IsGrouped ]
               [ div
                     [ Bulma.Control; Bulma.IsExpanded ]
-                    [ Html.input
-                          [ prop.classes [ Bulma.Input; Bulma.IsMedium ]
-                            prop.defaultValue todo.Description
-                            prop.value todo.EditDescription
-                            prop.onTextChange ((fun text -> SetEditedDescription(todo.Id, text)) >> dispatch) ] ]
+                    [ input
+                          [ classes [ Bulma.Input; Bulma.IsMedium ]
+                            defaultValue todo.Description
+                            value todo.EditDescription
+                            onTextChange ((fun text -> SetEditedDescription(todo.Id, text)) >> dispatch) ] ]
 
                 div
                     [ Bulma.Control; Bulma.Buttons ]
-                    [ Html.button
-                          [ prop.disabled (todo.EditDescription = "")
-                            prop.classes
+                    [ button
+                          [ disabled (todo.EditDescription = "")
+                            classes
                                 [ Bulma.Button
                                   if todo.EditDescription = todo.Description then
                                       Bulma.IsOutlined
                                   else
                                       Bulma.IsPrimary ]
-                            prop.onClick (fun _ -> dispatch (ApplyEdit todo.Id))
-                            prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaSave ] ] ] ]
+                            onClick (fun _ -> dispatch (ApplyEdit todo.Id))
+                            children [ i [ classes [ FA.Fa; FA.FaSave ] ] ] ]
 
-                      Html.button
-                          [ prop.classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
-                            prop.onClick (fun _ -> dispatch (CancelEdit todo.Id))
-                            prop.children [ Html.i [ prop.classes [ FA.Fa; FA.FaArrowRight ] ] ] ] ] ] ]
-
-let filterTodosBy filter todoList =
-    match filter with
-    | All -> todoList
-    | Completed -> Map.filter (fun id todo -> todo.Completed) todoList
-    | Incomplete -> Map.filter (fun id todo -> not todo.Completed) todoList
+                      button
+                          [ classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
+                            onClick (fun _ -> dispatch (CancelEdit todo.Id))
+                            children [ i [ classes [ FA.Fa; FA.FaArrowRight ] ] ] ] ] ] ]
 
 let todoList (state: State) (dispatch: Msg -> unit) =
-    Html.ul
-        [ prop.children
+    ul
+        [ children
               [ for id, todo in state.TodoList |> filterTodosBy state.SelectedFilter |> Map.toSeq ->
                     if todo.BeingEdited then
                         renderEditForm todo dispatch
@@ -237,27 +236,26 @@ let todoList (state: State) (dispatch: Msg -> unit) =
 let renderFilterTabs (state: State) (dispatch: Msg -> unit) =
     div
         [ Bulma.Tabs; Bulma.IsToggle; Bulma.IsFullwidth ]
-        [ Html.ul
-              [ Html.li
+        [ ul
+              [ li
                     [ if state.SelectedFilter = All then
-                          prop.className Bulma.IsActive
-                      prop.children [ Html.a [ prop.onClick (fun _ -> dispatch ShowAll); prop.text "All" ] ] ]
+                          className Bulma.IsActive
+                      children [ a [ onClick (fun _ -> dispatch ShowAll); text "All" ] ] ]
 
-                Html.li
+                li
                     [ if state.SelectedFilter = Completed then
-                          prop.className Bulma.IsActive
-                      prop.children [ Html.a [ prop.onClick (fun _ -> dispatch ShowCompleted); prop.text "Completed" ] ] ]
+                          className Bulma.IsActive
+                      children [ a [ onClick (fun _ -> dispatch ShowCompleted); text "Completed" ] ] ]
 
-                Html.li
+                li
                     [ if state.SelectedFilter = Incomplete then
-                          prop.className Bulma.IsActive
-                      prop.children
-                          [ Html.a [ prop.onClick (fun _ -> dispatch ShowIncomplete); prop.text "Incomplete" ] ] ] ] ]
+                          className Bulma.IsActive
+                      children [ a [ onClick (fun _ -> dispatch ShowIncomplete); text "Incomplete" ] ] ] ] ]
 
 let render state dispatch =
     Html.div
-        [ prop.style [ style.padding 20 ]
-          prop.children
+        [ style [ style.padding 20 ]
+          children
               [ appTitle
                 inputField state dispatch
                 renderFilterTabs state dispatch
