@@ -201,9 +201,9 @@ let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
                             children [ i [ classes [ FA.Fa; FA.FaSave ] ] ] ]
 
                       button
-                          [ classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
+                          [ classes [ Bulma.Button; Bulma.IsPrimary ]
                             onClick (fun _ -> dispatch (CancelEdit todo.Id))
-                            children [ i [ classes [ FA.Fa; FA.FaArrowRight ] ] ] ] ] ] ]
+                            children [ i [ classes [ FA.Fa; FA.FaTimes ] ] ] ] ] ] ]
 
 let todoList (state: State) (dispatch: Msg -> unit) =
     ul
