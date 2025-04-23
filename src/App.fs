@@ -88,6 +88,7 @@ let update msg state =
     | ApplyEdit todoId ->
         updateTodoList state todoId (fun todo ->
             { todo with
+                BeingEdited = false
                 Description = todo.EditDescription })
 
     | CancelEdit todoId -> updateTodoList state todoId (fun todo -> { todo with BeingEdited = false })
