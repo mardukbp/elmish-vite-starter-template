@@ -209,7 +209,7 @@ let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
 let todoList (state: State) (dispatch: Msg -> unit) =
     ul
         [ children
-              [ for _id, todo in state.TodoList |> filterTodosBy state.SelectedFilter |> Map.toSeq ->
+              [ for todo in state.TodoList |> filterTodosBy state.SelectedFilter |> Map.values ->
                     if todo.BeingEdited then
                         renderEditForm todo dispatch
                     else
