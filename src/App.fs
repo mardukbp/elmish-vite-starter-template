@@ -142,7 +142,8 @@ let inputField (state: State) (dispatch: Msg -> unit) =
           div
               [ Bulma.Control ]
               [ button
-                    [ classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
+                    [ disabled (state.NewTodo = "")
+                      classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
                       onClick (fun _ -> dispatch AddNewTodo)
                       children [ i [ classes [ FA.Fa; FA.FaPlus ] ] ] ] ] ]
 
