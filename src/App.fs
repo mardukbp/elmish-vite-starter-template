@@ -37,6 +37,7 @@ type Msg =
     | ToggleCompleted of Guid
     | CancelEdit of Guid
     | ApplyEdit of Guid
+    | SaveTodos
     | StartEditingTodo of Guid
     | SetEditedDescription of Guid * string
     | ShowAll
@@ -97,6 +98,8 @@ let update msg state =
         { state with
             TodoList = state.TodoList |> Map.remove todoId }
 
+    | SaveTodos -> state
+
     | SetEditedDescription(todoId, newText) ->
         updateTodoList state todoId (fun todo -> { todo with EditDescription = newText })
 
@@ -127,7 +130,18 @@ let update msg state =
 let div (classes: string list) (children: Fable.React.ReactElement list) =
     Html.div [ prop.classes classes; prop.children children ]
 
-let appTitle = p [ className Bulma.Title; text "Elmish To-Do list" ]
+let appTitle (state: State) (dispatch: Msg -> unit) =
+    div
+        [ Bulma.Field; Bulma.HasAddons ]
+        [ div [ Bulma.Control; Bulma.IsExpanded ] [ p [ className Bulma.Title; text "Elmish To-Do list" ] ]
+
+          div
+              [ Bulma.Control ]
+              [ button
+                    [ disabled state.TodoList.IsEmpty
+                      classes [ Bulma.Button; Bulma.IsPrimary; Bulma.IsMedium ]
+                      onClick (fun _ -> dispatch SaveTodos)
+                      children [ i [ classes [ FA.Fa; FA.FaSave ] ] ] ] ] ]
 
 let inputField (state: State) (dispatch: Msg -> unit) =
     div
@@ -239,7 +253,7 @@ let render state dispatch =
     Html.div
         [ style [ style.padding 20 ]
           children
-              [ appTitle
+              [ appTitle state dispatch
                 inputField state dispatch
                 renderFilterTabs state dispatch
                 todoList state dispatch ] ]
