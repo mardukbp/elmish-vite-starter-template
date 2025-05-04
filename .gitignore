@@ -27,3 +27,5 @@ dist-ssr
 src/obj/*
 src/fable_modules/*
 src/bin/*
+
+dist/
