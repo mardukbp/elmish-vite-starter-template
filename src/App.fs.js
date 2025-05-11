@@ -211,7 +211,7 @@ export function renderEditForm(todo, dispatch) {
         onChange: (ev) => {
             dispatch(new Msg(7, [todo.Id, ev.target.value]));
         },
-    }))), div(ofArray(["control", "buttons"]), ofArray([createElement("button", createObj(ofArray([["disabled", todo.EditDescription === ""], ["className", join(" ", toList(delay(() => append(singleton_1("button"), delay(() => ((todo.EditDescription === todo.Description) ? singleton_1("is-outlined") : singleton_1("is-primary")))))))], ["onClick", (_arg) => {
+    }))), div(ofArray(["control", "buttons"]), ofArray([createElement("button", createObj(ofArray([["disabled", todo.EditDescription === todo.Description], ["className", join(" ", toList(delay(() => append(singleton_1("button"), delay(() => ((todo.EditDescription === todo.Description) ? singleton_1("is-outlined") : singleton_1("is-primary")))))))], ["onClick", (_arg) => {
         dispatch(new Msg(5, [todo.Id]));
     }], (elems = [createElement("i", {
         className: join(" ", ["fa", "fa-save"]),

@@ -192,7 +192,7 @@ let renderEditForm (todo: Todo) (dispatch: Msg -> unit) =
                 div
                     [ Bulma.Control; Bulma.Buttons ]
                     [ button
-                          [ disabled (todo.EditDescription = "")
+                          [ disabled (todo.EditDescription = todo.Description)
                             classes
                                 [ Bulma.Button
                                   if todo.EditDescription = todo.Description then
